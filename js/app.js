@@ -44,9 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const badgeActive = document.getElementById('badge-active');
   const badgeCompleted = document.getElementById('badge-completed');
 
-  // Настройки
-  const accentButtons = document.querySelectorAll('.accent-btn');
-  const densityRadios = document.querySelectorAll('input[name="density-option"]');
+  // Панель быстрой кастомизации
+  const accentDots = document.querySelectorAll('.accent-dot');
+  const densityButtons = document.querySelectorAll('.density-btn');
+  const quickExportBtn = document.getElementById('quick-export-btn');
+
+  // Настройки в диалоге
   const exportJsonBtn = document.getElementById('export-json-btn');
   const importJsonInput = document.getElementById('import-json-input');
   const clearAllDataBtn = document.getElementById('clear-all-data-btn');
@@ -80,10 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
       navigator.serviceWorker
         .register('./sw.js')
         .then((reg) => {
-          console.log('TaskFlow ServiceWorker зарегистрирован успешно:', reg.scope);
+          console.log('TaskFlow ServiceWorker зарегистрирован:', reg.scope);
         })
         .catch((err) => {
-          console.log('Ошибка регистрации ServiceWorker:', err);
+          console.log('Ошибка ServiceWorker:', err);
         });
     });
   }
@@ -137,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function setAccent(accent) {
     document.documentElement.setAttribute('data-accent', accent);
     localStorage.setItem('antigravity_accent', accent);
-    accentButtons.forEach((btn) => {
+    accentDots.forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.accent === accent);
     });
   }
@@ -145,8 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function setDensity(density) {
     document.documentElement.setAttribute('data-density', density);
     localStorage.setItem('antigravity_density', density);
-    const radio = document.querySelector(`input[name="density-option"][value="${density}"]`);
-    if (radio) radio.checked = true;
+    densityButtons.forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.density === density);
+    });
   }
 
   function toggleTheme() {
@@ -157,16 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
     announceA11y(`Включена ${newTheme === 'dark' ? 'темная' : 'светлая'} тема`);
   }
 
-  accentButtons.forEach((btn) => {
+  accentDots.forEach((btn) => {
     btn.addEventListener('click', () => {
       setAccent(btn.dataset.accent);
-      showToast(`Цветовая схема обновлена`);
+      showToast(`Цвет темы изменен`);
     });
   });
 
-  densityRadios.forEach((radio) => {
-    radio.addEventListener('change', (e) => {
-      setDensity(e.target.value);
+  densityButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setDensity(btn.dataset.density);
       showToast(`Плотность интерфейса изменена`);
     });
   });
@@ -207,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      Экспорт и импорт данных (JSON)
      ========================================================================== */
-  exportJsonBtn.addEventListener('click', () => {
+  function downloadJsonBackup() {
     const jsonStr = store.exportData();
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -220,37 +224,44 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast('Резервная копия скачана!');
-  });
+  }
 
-  importJsonInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  if (quickExportBtn) quickExportBtn.addEventListener('click', downloadJsonBackup);
+  if (exportJsonBtn) exportJsonBtn.addEventListener('click', downloadJsonBackup);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const count = store.importData(event.target.result, false);
+  if (importJsonInput) {
+    importJsonInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const count = store.importData(event.target.result, false);
+          render();
+          showToast(`Импортировано задач: ${count}`);
+          announceA11y(`Успешно импортировано ${count} задач`);
+          if (typeof settingsDialog.close === 'function') settingsDialog.close();
+        } catch (err) {
+          showToast('Ошибка при чтении файла импорта');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
+
+  if (clearAllDataBtn) {
+    clearAllDataBtn.addEventListener('click', () => {
+      if (confirm('Вы уверены, что хотите удалить абсолютно все задачи?')) {
+        store.clearAll();
         render();
-        showToast(`Импортировано задач: ${count}`);
-        announceA11y(`Успешно импортировано ${count} задач`);
+        showToast('Все задачи удалены');
+        announceA11y('Все задачи были удалены');
         if (typeof settingsDialog.close === 'function') settingsDialog.close();
-      } catch (err) {
-        showToast('Ошибка при чтении файла импорта');
       }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  });
-
-  clearAllDataBtn.addEventListener('click', () => {
-    if (confirm('Вы уверены, что хотите удалить абсолютно все задачи?')) {
-      store.clearAll();
-      render();
-      showToast('Все задачи удалены');
-      announceA11y('Все задачи были удалены');
-      if (typeof settingsDialog.close === 'function') settingsDialog.close();
-    }
-  });
+    });
+  }
 
   /* ==========================================================================
      Уведомления, тактильный отклик и доступность (a11y)

@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="Кастомизируемый, быстрый и удобный список задач с поддержкой мобильного приложения (PWA), приоритетами, дедлайнами и фильтрацией.">
+  <meta name="description" content="Кастомизируемый, быстрый и удобный список задач с поддержкой мобильного приложения (PWA), приоритетами, дедлайнами и темами.">
   <meta name="theme-color" content="#3b82f6">
 
   <!-- PWA и мобильные метатеги -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json?v=2.2">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TaskFlow">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='38' fill='%233b82f6'/><path d='M50 100l30 30L145 65' fill='none' stroke='white' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 
-  <title>TaskFlow — Список задач</title>
+  <title>TaskFlow v2.0 — Список задач</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2.2">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
 </head>
 <body>
@@ -37,15 +37,15 @@
         <div>
           <div class="brand-badge-row">
             <h1 class="brand-title">TaskFlow</h1>
-            <span class="pwa-badge" id="pwa-status-badge" title="Поддержка PWA офлайн">PWA READY</span>
+            <span class="pwa-badge" id="pwa-status-badge" title="Поддержка PWA офлайн">PWA v2.0</span>
           </div>
-          <p class="brand-subtitle">Ваш персональный список задач</p>
+          <p class="brand-subtitle">Персональный кастомизируемый список задач</p>
         </div>
       </div>
 
       <div class="header-actions">
         <!-- Кнопка установки PWA приложения -->
-        <button id="pwa-install-btn" class="icon-btn pwa-install-btn hidden" aria-label="Установить приложение на телефон или рабочий стол" title="Установить приложение">
+        <button id="pwa-install-btn" class="icon-btn pwa-install-btn hidden" aria-label="Установить приложение на телефон" title="Установить приложение">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -53,16 +53,8 @@
           </svg>
         </button>
 
-        <!-- Кнопка настроек и кастомизации -->
-        <button id="settings-btn" class="icon-btn" aria-label="Настройки кастомизации и темы" title="Кастомизация и темы">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-        </button>
-
         <!-- Переключатель светлой / темной темы -->
-        <button id="theme-toggle" class="icon-btn" aria-label="Переключить тему оформления" title="Сменить тему">
+        <button id="theme-toggle" class="icon-btn" aria-label="Переключить тему оформления" title="Сменить тему (Светлая / Темная)">
           <svg class="theme-icon sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"/>
             <line x1="12" y1="1" x2="12" y2="3"/>
@@ -78,8 +70,49 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
         </button>
+
+        <!-- Кнопка модального окна дополнительных настроек -->
+        <button id="settings-btn" class="icon-btn" aria-label="Резервное копирование и экспорт" title="Резервное копирование и сброс">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
       </div>
     </header>
+
+    <!-- ПАНЕЛЬ БЫСТРОЙ КАСТОМИЗАЦИИ (ВИДНА СРАЗУ НА ЭКРАНЕ) -->
+    <section class="customization-bar" aria-label="Панель кастомизации оформления">
+      <div class="customization-inner">
+        <!-- Выбор акцентного цвета -->
+        <div class="custom-block">
+          <span class="custom-label">Цвет темы:</span>
+          <div class="accent-palette-inline" id="accent-picker">
+            <button type="button" class="accent-dot" data-accent="blue" style="--swatch: #3b82f6;" title="Синий океан" aria-label="Синий"></button>
+            <button type="button" class="accent-dot" data-accent="purple" style="--swatch: #8b5cf6;" title="Фиолетовый" aria-label="Фиолетовый"></button>
+            <button type="button" class="accent-dot" data-accent="emerald" style="--swatch: #10b981;" title="Изумрудный" aria-label="Изумрудный"></button>
+            <button type="button" class="accent-dot" data-accent="rose" style="--swatch: #f43f5e;" title="Неоновый розовый" aria-label="Розовый"></button>
+            <button type="button" class="accent-dot" data-accent="amber" style="--swatch: #f59e0b;" title="Янтарный" aria-label="Янтарный"></button>
+          </div>
+        </div>
+
+        <!-- Переключатель плотности интерфейса -->
+        <div class="custom-block">
+          <span class="custom-label">Вид:</span>
+          <div class="density-switch">
+            <button type="button" class="density-btn active" data-density="comfortable" title="Просторный комфортный вид">Комфортный</button>
+            <button type="button" class="density-btn" data-density="compact" title="Компактный вид списка">Компактный</button>
+          </div>
+        </div>
+
+        <!-- Быстрый экспорт JSON -->
+        <div class="custom-block quick-backup">
+          <button type="button" id="quick-export-btn" class="quick-btn" title="Скачать резервную копию задач в JSON">
+            💾 Бэкап JSON
+          </button>
+        </div>
+      </div>
+    </section>
 
     <!-- Карточка прогресса и статистики -->
     <section class="stats-card" aria-label="Статистика выполнения">
@@ -120,7 +153,7 @@
             type="text" 
             id="task-input" 
             class="task-input" 
-            placeholder="Какую задачу добавим? (например: Подготовить презентацию)" 
+            placeholder="Какую задачу добавим? (например: Подготовить отчет)" 
             maxlength="200" 
             required 
             autocomplete="off"
@@ -234,56 +267,29 @@
 
     <!-- Подвал страницы -->
     <footer class="app-footer">
-      <p>TaskFlow v2.0 • Мобильная PWA-версия с офлайн-доступом</p>
+      <p>TaskFlow v2.0 • Мобильная PWA-версия с кастомизацией и офлайн-доступом</p>
     </footer>
   </div>
 
-  <!-- Модальное окно кастомизации и настроек -->
+  <!-- Модальное окно резервного копирования и настроек -->
   <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-dialog-title">
     <div class="dialog-content">
       <div class="dialog-header">
-        <h2 id="settings-dialog-title" class="dialog-title">🎨 Кастомизация TaskFlow</h2>
+        <h2 id="settings-dialog-title" class="dialog-title">⚙️ Данные и Резервное копирование</h2>
         <button type="button" id="close-settings-btn" class="dialog-close-btn" aria-label="Закрыть настройки">✕</button>
       </div>
 
       <div class="dialog-body">
-        <!-- Выбор акцентного цвета -->
-        <section class="settings-section">
-          <h3 class="section-title">Цветовой акцент интерфейса</h3>
-          <p class="section-desc">Выберите ваш любимый оттенок темы:</p>
-          <div class="accent-picker" id="accent-picker">
-            <button type="button" class="accent-btn" data-accent="blue" style="--accent-swatch: #3b82f6;" title="Ocean Blue" aria-label="Ocean Blue"></button>
-            <button type="button" class="accent-btn" data-accent="purple" style="--accent-swatch: #8b5cf6;" title="Royal Purple" aria-label="Royal Purple"></button>
-            <button type="button" class="accent-btn" data-accent="emerald" style="--accent-swatch: #10b981;" title="Emerald" aria-label="Emerald"></button>
-            <button type="button" class="accent-btn" data-accent="rose" style="--accent-swatch: #f43f5e;" title="Neon Rose" aria-label="Neon Rose"></button>
-            <button type="button" class="accent-btn" data-accent="amber" style="--accent-swatch: #f59e0b;" title="Sunset Amber" aria-label="Sunset Amber"></button>
-          </div>
-        </section>
-
-        <!-- Плотность интерфейса -->
-        <section class="settings-section">
-          <h3 class="section-title">Плотность отображения</h3>
-          <div class="density-group">
-            <label class="density-label">
-              <input type="radio" name="density-option" value="comfortable" id="density-comfortable" checked>
-              <span>Комфортный (просторный)</span>
-            </label>
-            <label class="density-label">
-              <input type="radio" name="density-option" value="compact" id="density-compact">
-              <span>Компактный (больше задач)</span>
-            </label>
-          </div>
-        </section>
-
         <!-- Управление данными (Экспорт / Импорт) -->
         <section class="settings-section">
-          <h3 class="section-title">Резервное копирование и перенос</h3>
+          <h3 class="section-title">Резервная копия (JSON)</h3>
+          <p class="section-desc">Сохраните все ваши задачи в файл или перенесите на другой телефон/компьютер:</p>
           <div class="data-actions-row">
             <button type="button" id="export-json-btn" class="btn btn-secondary">
-              📥 Экспорт в JSON
+              📥 Скачать JSON
             </button>
             <label class="btn btn-secondary file-upload-label">
-              📤 Импорт из JSON
+              📤 Загрузить JSON
               <input type="file" id="import-json-input" accept=".json" class="visually-hidden">
             </label>
           </div>
@@ -291,7 +297,7 @@
 
         <!-- Опасная зона -->
         <section class="settings-section danger-section">
-          <h3 class="section-title text-danger">Очистка данных</h3>
+          <h3 class="section-title text-danger">Сброс данных</h3>
           <button type="button" id="clear-all-data-btn" class="btn btn-danger">
             ⚠️ Очистить все задачи
           </button>
@@ -306,8 +312,8 @@
   <!-- Доступный живой регион для озвучивания скринридером -->
   <div id="a11y-status" class="visually-hidden" aria-live="polite"></div>
 
-  <!-- Подключение скриптов -->
-  <script src="js/store.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Подключение скриптов с cache-busting -->
+  <script src="js/store.js?v=2.2"></script>
+  <script src="js/app.js?v=2.2"></script>
 </body>
 </html>
