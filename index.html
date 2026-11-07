@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="system">
+<html lang="ru" data-theme="system" data-accent="blue" data-density="comfortable">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Современный, быстрый и удобный список задач с сохранением в браузере, фильтрацией и темной темой.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Кастомизируемый, быстрый и удобный список задач с поддержкой мобильного приложения (PWA), приоритетами, дедлайнами и фильтрацией.">
   <meta name="theme-color" content="#3b82f6">
+
+  <!-- PWA и мобильные метатеги -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TaskFlow">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='38' fill='%233b82f6'/><path d='M50 100l30 30L145 65' fill='none' stroke='white' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+
   <title>TaskFlow — Список задач</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
@@ -20,19 +29,39 @@
     <header class="app-header">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 11l3 3L22 4"/>
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
           </svg>
         </div>
         <div>
-          <h1 class="brand-title">TaskFlow</h1>
+          <div class="brand-badge-row">
+            <h1 class="brand-title">TaskFlow</h1>
+            <span class="pwa-badge" id="pwa-status-badge" title="Поддержка PWA офлайн">PWA READY</span>
+          </div>
           <p class="brand-subtitle">Ваш персональный список задач</p>
         </div>
       </div>
 
       <div class="header-actions">
-        <!-- Переключатель темы оформления -->
+        <!-- Кнопка установки PWA приложения -->
+        <button id="pwa-install-btn" class="icon-btn pwa-install-btn hidden" aria-label="Установить приложение на телефон или рабочий стол" title="Установить приложение">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
+
+        <!-- Кнопка настроек и кастомизации -->
+        <button id="settings-btn" class="icon-btn" aria-label="Настройки кастомизации и темы" title="Кастомизация и темы">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+
+        <!-- Переключатель светлой / темной темы -->
         <button id="theme-toggle" class="icon-btn" aria-label="Переключить тему оформления" title="Сменить тему">
           <svg class="theme-icon sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"/>
@@ -52,7 +81,7 @@
       </div>
     </header>
 
-    <!-- Карточка прогресса -->
+    <!-- Карточка прогресса и статистики -->
     <section class="stats-card" aria-label="Статистика выполнения">
       <div class="stats-header">
         <div>
@@ -82,43 +111,61 @@
       </div>
     </section>
 
-    <!-- Форма добавления задачи -->
+    <!-- Форма добавления задачи с кастомизацией параметров -->
     <form id="todo-form" class="todo-form" novalidate>
-      <div class="input-row">
-        <div class="input-wrapper">
+      <div class="form-card">
+        <div class="input-main-row">
           <label for="task-input" class="visually-hidden">Новая задача</label>
           <input 
             type="text" 
             id="task-input" 
             class="task-input" 
-            placeholder="Какую задачу добавим? (например: Подготовить отчет)" 
+            placeholder="Какую задачу добавим? (например: Подготовить презентацию)" 
             maxlength="200" 
             required 
             autocomplete="off"
           >
+          <button type="submit" id="add-btn" class="btn btn-primary submit-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Добавить</span>
+          </button>
         </div>
-        <div class="category-wrapper">
-          <label for="category-select" class="visually-hidden">Категория задачи</label>
-          <select id="category-select" class="category-select">
-            <option value="general">🎯 Общее</option>
-            <option value="work">💼 Работа</option>
-            <option value="study">📚 Учеба</option>
-            <option value="personal">🏠 Личное</option>
-            <option value="urgent">⚡ Срочно</option>
-          </select>
+
+        <!-- Дополнительные параметры (Категория, Приоритет, Срок) -->
+        <div class="params-row">
+          <div class="param-group">
+            <label for="category-select" class="param-label">Категория:</label>
+            <select id="category-select" class="param-select">
+              <option value="general">🎯 Общее</option>
+              <option value="work">💼 Работа</option>
+              <option value="study">📚 Учеба</option>
+              <option value="personal">🏠 Личное</option>
+              <option value="urgent">⚡ Срочно</option>
+            </select>
+          </div>
+
+          <div class="param-group">
+            <label for="priority-select" class="param-label">Приоритет:</label>
+            <select id="priority-select" class="param-select">
+              <option value="medium">🟡 Средний</option>
+              <option value="high">🔴 Высокий</option>
+              <option value="low">🟢 Низкий</option>
+            </select>
+          </div>
+
+          <div class="param-group">
+            <label for="due-date-input" class="param-label">Срок до:</label>
+            <input type="date" id="due-date-input" class="param-date">
+          </div>
         </div>
-        <button type="submit" id="add-btn" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          <span>Добавить</span>
-        </button>
       </div>
       <div id="form-error" class="form-error" role="alert" aria-live="polite"></div>
     </form>
 
-    <!-- Панель фильтров и поиска -->
+    <!-- Панель фильтров, сортировки и поиска -->
     <section class="toolbar" aria-label="Панель инструментов списка">
       <div class="filters-group" role="tablist" aria-label="Фильтр задач">
         <button type="button" class="filter-tab active" data-filter="all" role="tab" aria-selected="true">
@@ -128,23 +175,38 @@
           Активные <span class="tab-badge" id="badge-active">0</span>
         </button>
         <button type="button" class="filter-tab" data-filter="completed" role="tab" aria-selected="false">
-          Завершенные <span class="tab-badge" id="badge-completed">0</span>
+          Готово <span class="tab-badge" id="badge-completed">0</span>
         </button>
       </div>
 
-      <div class="search-wrapper">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input 
-          type="search" 
-          id="search-input" 
-          class="search-input" 
-          placeholder="Поиск по задачам..." 
-          aria-label="Поиск по тексту задач"
-          autocomplete="off"
-        >
+      <div class="toolbar-right">
+        <!-- Сортировка -->
+        <div class="sort-wrapper">
+          <label for="sort-select" class="visually-hidden">Сортировка задач</label>
+          <select id="sort-select" class="sort-select" title="Сортировка задач">
+            <option value="date-desc">🕒 Сначала новые</option>
+            <option value="date-asc">⏳ Сначала старые</option>
+            <option value="priority-desc">🔥 По приоритету</option>
+            <option value="due-date">⏰ По дедлайну</option>
+            <option value="alpha">🔤 По алфавиту</option>
+          </select>
+        </div>
+
+        <!-- Поиск -->
+        <div class="search-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input 
+            type="search" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Поиск..." 
+            aria-label="Поиск по задачам"
+            autocomplete="off"
+          >
+        </div>
       </div>
     </section>
 
@@ -172,9 +234,71 @@
 
     <!-- Подвал страницы -->
     <footer class="app-footer">
-      <p>Создано с использованием передовых AI-технологий • Все данные сохраняются локально в вашем браузере</p>
+      <p>TaskFlow v2.0 • Мобильная PWA-версия с офлайн-доступом</p>
     </footer>
   </div>
+
+  <!-- Модальное окно кастомизации и настроек -->
+  <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-dialog-title">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2 id="settings-dialog-title" class="dialog-title">🎨 Кастомизация TaskFlow</h2>
+        <button type="button" id="close-settings-btn" class="dialog-close-btn" aria-label="Закрыть настройки">✕</button>
+      </div>
+
+      <div class="dialog-body">
+        <!-- Выбор акцентного цвета -->
+        <section class="settings-section">
+          <h3 class="section-title">Цветовой акцент интерфейса</h3>
+          <p class="section-desc">Выберите ваш любимый оттенок темы:</p>
+          <div class="accent-picker" id="accent-picker">
+            <button type="button" class="accent-btn" data-accent="blue" style="--accent-swatch: #3b82f6;" title="Ocean Blue" aria-label="Ocean Blue"></button>
+            <button type="button" class="accent-btn" data-accent="purple" style="--accent-swatch: #8b5cf6;" title="Royal Purple" aria-label="Royal Purple"></button>
+            <button type="button" class="accent-btn" data-accent="emerald" style="--accent-swatch: #10b981;" title="Emerald" aria-label="Emerald"></button>
+            <button type="button" class="accent-btn" data-accent="rose" style="--accent-swatch: #f43f5e;" title="Neon Rose" aria-label="Neon Rose"></button>
+            <button type="button" class="accent-btn" data-accent="amber" style="--accent-swatch: #f59e0b;" title="Sunset Amber" aria-label="Sunset Amber"></button>
+          </div>
+        </section>
+
+        <!-- Плотность интерфейса -->
+        <section class="settings-section">
+          <h3 class="section-title">Плотность отображения</h3>
+          <div class="density-group">
+            <label class="density-label">
+              <input type="radio" name="density-option" value="comfortable" id="density-comfortable" checked>
+              <span>Комфортный (просторный)</span>
+            </label>
+            <label class="density-label">
+              <input type="radio" name="density-option" value="compact" id="density-compact">
+              <span>Компактный (больше задач)</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Управление данными (Экспорт / Импорт) -->
+        <section class="settings-section">
+          <h3 class="section-title">Резервное копирование и перенос</h3>
+          <div class="data-actions-row">
+            <button type="button" id="export-json-btn" class="btn btn-secondary">
+              📥 Экспорт в JSON
+            </button>
+            <label class="btn btn-secondary file-upload-label">
+              📤 Импорт из JSON
+              <input type="file" id="import-json-input" accept=".json" class="visually-hidden">
+            </label>
+          </div>
+        </section>
+
+        <!-- Опасная зона -->
+        <section class="settings-section danger-section">
+          <h3 class="section-title text-danger">Очистка данных</h3>
+          <button type="button" id="clear-all-data-btn" class="btn btn-danger">
+            ⚠️ Очистить все задачи
+          </button>
+        </section>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Всплывающие уведомления (Toast) -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

@@ -1,14 +1,16 @@
 /**
- * App: Логика взаимодействия с интерфейсом (DOM, события, темы, доступность)
+ * App: Управление пользовательским интерфейсом, PWA, кастомизацией и событиями
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   const store = new TaskStore('antigravity_todo_tasks');
 
-  // DOM-элементы
+  // DOM элементы формы и списка
   const todoForm = document.getElementById('todo-form');
   const taskInput = document.getElementById('task-input');
   const categorySelect = document.getElementById('category-select');
+  const prioritySelect = document.getElementById('priority-select');
+  const dueDateInput = document.getElementById('due-date-input');
   const formError = document.getElementById('form-error');
 
   const tasksList = document.getElementById('tasks-list');
@@ -17,13 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const clearCompletedBtn = document.getElementById('clear-completed-btn');
 
   const searchInput = document.getElementById('search-input');
+  const sortSelect = document.getElementById('sort-select');
   const filterTabs = document.querySelectorAll('.filter-tab');
 
   const themeToggle = document.getElementById('theme-toggle');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsDialog = document.getElementById('settings-dialog');
+  const closeSettingsBtn = document.getElementById('close-settings-btn');
+  const pwaInstallBtn = document.getElementById('pwa-install-btn');
+
   const toast = document.getElementById('toast');
   const a11yStatus = document.getElementById('a11y-status');
 
-  // Элементы статистики
+  // Статистика
   const percentLabel = document.getElementById('percent-label');
   const progressFill = document.getElementById('progress-fill');
   const progressBar = document.getElementById('progress-bar');
@@ -32,17 +40,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const countActiveStat = document.getElementById('count-active-stat');
   const countCompletedStat = document.getElementById('count-completed-stat');
 
-  // Бейджи в табах
   const badgeAll = document.getElementById('badge-all');
   const badgeActive = document.getElementById('badge-active');
   const badgeCompleted = document.getElementById('badge-completed');
 
-  // Локальное состояние UI
+  // Настройки
+  const accentButtons = document.querySelectorAll('.accent-btn');
+  const densityRadios = document.querySelectorAll('input[name="density-option"]');
+  const exportJsonBtn = document.getElementById('export-json-btn');
+  const importJsonInput = document.getElementById('import-json-input');
+  const clearAllDataBtn = document.getElementById('clear-all-data-btn');
+
+  // Состояние
   let currentFilter = 'all';
   let currentSearch = '';
+  let currentSort = 'date-desc';
   let toastTimeout = null;
+  let deferredPrompt = null;
 
-  // Имена категорий на русском
   const CATEGORY_NAMES = {
     work: 'Работа',
     personal: 'Личное',
@@ -51,10 +66,57 @@ document.addEventListener('DOMContentLoaded', () => {
     general: 'Общее',
   };
 
+  const PRIORITY_NAMES = {
+    high: '🔴 Высокий',
+    medium: '🟡 Средний',
+    low: '🟢 Низкий',
+  };
+
   /* ==========================================================================
-     Инициализация темы оформления
+     PWA Service Worker и установка приложения
      ========================================================================== */
-  function initTheme() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('./sw.js')
+        .then((reg) => {
+          console.log('TaskFlow ServiceWorker зарегистрирован успешно:', reg.scope);
+        })
+        .catch((err) => {
+          console.log('Ошибка регистрации ServiceWorker:', err);
+        });
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (pwaInstallBtn) {
+      pwaInstallBtn.classList.remove('hidden');
+    }
+  });
+
+  if (pwaInstallBtn) {
+    pwaInstallBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('Приложение установлено!');
+          pwaInstallBtn.classList.add('hidden');
+        }
+        deferredPrompt = null;
+      } else {
+        showToast('Для установки нажмите «Поделиться» ➔ «На экран Домой» в меню браузера');
+      }
+    });
+  }
+
+  /* ==========================================================================
+     Кастомизация: Цветовой акцент и плотность
+     ========================================================================== */
+  function initCustomization() {
+    // Тема (светлая/темная)
     const savedTheme = localStorage.getItem('antigravity_todo_theme');
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
@@ -62,6 +124,29 @@ document.addEventListener('DOMContentLoaded', () => {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
     }
+
+    // Акцентный цвет
+    const savedAccent = localStorage.getItem('antigravity_accent') || 'blue';
+    setAccent(savedAccent);
+
+    // Плотность
+    const savedDensity = localStorage.getItem('antigravity_density') || 'comfortable';
+    setDensity(savedDensity);
+  }
+
+  function setAccent(accent) {
+    document.documentElement.setAttribute('data-accent', accent);
+    localStorage.setItem('antigravity_accent', accent);
+    accentButtons.forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.accent === accent);
+    });
+  }
+
+  function setDensity(density) {
+    document.documentElement.setAttribute('data-density', density);
+    localStorage.setItem('antigravity_density', density);
+    const radio = document.querySelector(`input[name="density-option"][value="${density}"]`);
+    if (radio) radio.checked = true;
   }
 
   function toggleTheme() {
@@ -72,8 +157,103 @@ document.addEventListener('DOMContentLoaded', () => {
     announceA11y(`Включена ${newTheme === 'dark' ? 'темная' : 'светлая'} тема`);
   }
 
+  accentButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setAccent(btn.dataset.accent);
+      showToast(`Цветовая схема обновлена`);
+    });
+  });
+
+  densityRadios.forEach((radio) => {
+    radio.addEventListener('change', (e) => {
+      setDensity(e.target.value);
+      showToast(`Плотность интерфейса изменена`);
+    });
+  });
+
+  themeToggle.addEventListener('click', toggleTheme);
+
+  // Модальное окно настроек
+  settingsBtn.addEventListener('click', () => {
+    if (typeof settingsDialog.showModal === 'function') {
+      settingsDialog.showModal();
+    } else {
+      settingsDialog.setAttribute('open', '');
+    }
+  });
+
+  closeSettingsBtn.addEventListener('click', () => {
+    if (typeof settingsDialog.close === 'function') {
+      settingsDialog.close();
+    } else {
+      settingsDialog.removeAttribute('open');
+    }
+  });
+
+  settingsDialog.addEventListener('click', (e) => {
+    const rect = settingsDialog.getBoundingClientRect();
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      if (typeof settingsDialog.close === 'function') {
+        settingsDialog.close();
+      }
+    }
+  });
+
   /* ==========================================================================
-     Уведомления и доступность (a11y)
+     Экспорт и импорт данных (JSON)
+     ========================================================================== */
+  exportJsonBtn.addEventListener('click', () => {
+    const jsonStr = store.exportData();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `taskflow-backup-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Резервная копия скачана!');
+  });
+
+  importJsonInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const count = store.importData(event.target.result, false);
+        render();
+        showToast(`Импортировано задач: ${count}`);
+        announceA11y(`Успешно импортировано ${count} задач`);
+        if (typeof settingsDialog.close === 'function') settingsDialog.close();
+      } catch (err) {
+        showToast('Ошибка при чтении файла импорта');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  clearAllDataBtn.addEventListener('click', () => {
+    if (confirm('Вы уверены, что хотите удалить абсолютно все задачи?')) {
+      store.clearAll();
+      render();
+      showToast('Все задачи удалены');
+      announceA11y('Все задачи были удалены');
+      if (typeof settingsDialog.close === 'function') settingsDialog.close();
+    }
+  });
+
+  /* ==========================================================================
+     Уведомления, тактильный отклик и доступность (a11y)
      ========================================================================== */
   function showToast(message) {
     if (toastTimeout) clearTimeout(toastTimeout);
@@ -93,8 +273,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function triggerHaptic() {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(25);
+    }
+  }
+
   /* ==========================================================================
-     Форматирование даты и времени
+     Форматирование дат и дедлайнов
      ========================================================================== */
   function formatRelativeTime(isoString) {
     if (!isoString) return '';
@@ -112,8 +298,24 @@ document.addEventListener('DOMContentLoaded', () => {
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   }
 
+  function formatDueDate(dueDateStr) {
+    if (!dueDateStr) return null;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const parts = dueDateStr.split('-');
+    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    const readable = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+
+    if (dueDateStr < todayStr) {
+      return { text: `⚠️ Просрочено (${readable})`, isOverdue: true, isToday: false };
+    } else if (dueDateStr === todayStr) {
+      return { text: `🔥 Срок сегодня!`, isOverdue: false, isToday: true };
+    } else {
+      return { text: `⏰ До ${readable}`, isOverdue: false, isToday: false };
+    }
+  }
+
   /* ==========================================================================
-     Обновление статистики и прогресс-бара
+     Обновление статистики
      ========================================================================== */
   function updateStats() {
     const stats = store.getStats();
@@ -130,22 +332,20 @@ document.addEventListener('DOMContentLoaded', () => {
     badgeActive.textContent = stats.active;
     badgeCompleted.textContent = stats.completed;
 
-    // Склонение слова "задача"
-    const remainingText = formatRemainingText(stats.active);
-    itemsLeft.textContent = remainingText;
+    itemsLeft.textContent = formatRemainingText(stats.active);
 
-    // Мотивационный текст
     if (stats.total === 0) {
       motivationText.textContent = 'Список пуст — добавьте первую задачу!';
     } else if (stats.percent === 100) {
       motivationText.textContent = 'Превосходно! Все задачи выполнены 🎉';
+    } else if (stats.overdue > 0) {
+      motivationText.textContent = `Внимание: есть просроченные задачи (${stats.overdue}) ⚠️`;
     } else if (stats.percent >= 50) {
       motivationText.textContent = 'Отличный темп, больше половины сделано! 💪';
     } else {
       motivationText.textContent = 'Продуктивного дня, шаг за шагом! 🚀';
     }
 
-    // Состояние кнопки очистки завершенных
     clearCompletedBtn.style.visibility = stats.completed > 0 ? 'visible' : 'hidden';
   }
 
@@ -166,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tasks = store.getFilteredTasks({
       filter: currentFilter,
       searchQuery: currentSearch,
+      sortBy: currentSort,
     });
 
     tasksList.innerHTML = '';
@@ -183,14 +384,14 @@ document.addEventListener('DOMContentLoaded', () => {
         emptyState.querySelector('.empty-text').textContent = 'Отличная работа, можно отдохнуть или добавить новые';
       } else {
         emptyState.querySelector('.empty-title').textContent = 'Задач пока нет';
-        emptyState.querySelector('.empty-text').textContent = 'Добавьте свою первую задачу с помощью формы выше!';
+        emptyState.querySelector('.empty-text').textContent = 'Добавьте задачу через форму выше!';
       }
     } else {
       emptyState.classList.add('hidden');
 
       tasks.forEach((task) => {
         const li = document.createElement('li');
-        li.className = `task-item ${task.completed ? 'completed' : ''}`;
+        li.className = `task-item priority-${task.priority || 'medium'} ${task.completed ? 'completed' : ''}`;
         li.dataset.id = task.id;
 
         if (task.id === animId) {
@@ -198,7 +399,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const catName = CATEGORY_NAMES[task.category] || CATEGORY_NAMES.general;
+        const priorityName = PRIORITY_NAMES[task.priority] || PRIORITY_NAMES.medium;
         const formattedDate = formatRelativeTime(task.createdAt);
+        const dueInfo = formatDueDate(task.dueDate);
+
+        let dueBadgeHtml = '';
+        if (dueInfo && !task.completed) {
+          const dueClass = dueInfo.isOverdue ? 'overdue' : (dueInfo.isToday ? 'today' : '');
+          dueBadgeHtml = `<span class="badge badge-date ${dueClass}">${dueInfo.text}</span>`;
+        }
 
         li.innerHTML = `
           <label class="checkbox-container" aria-label="Отметить задачу как ${task.completed ? 'невыполненную' : 'выполненную'}">
@@ -214,18 +423,20 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="task-title" title="Двойной клик для редактирования">${escapeHTML(task.text)}</span>
             <div class="task-meta">
               <span class="badge badge-${task.category}">${catName}</span>
+              <span class="badge badge-priority badge-priority-${task.priority}">${priorityName}</span>
+              ${dueBadgeHtml}
               <time datetime="${task.createdAt}">${formattedDate}</time>
             </div>
           </div>
 
           <div class="task-actions">
-            <button type="button" class="action-btn edit-btn" title="Редактировать задачу" aria-label="Редактировать">
+            <button type="button" class="action-btn edit-btn" title="Редактировать" aria-label="Редактировать">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
             </button>
-            <button type="button" class="action-btn delete-btn" title="Удалить задачу" aria-label="Удалить">
+            <button type="button" class="action-btn delete-btn" title="Удалить" aria-label="Удалить">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -262,12 +473,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formError.textContent = '';
     const category = categorySelect.value;
+    const priority = prioritySelect.value;
+    const dueDate = dueDateInput.value || null;
 
     try {
-      const newTask = store.addTask({ text, category });
+      const newTask = store.addTask({ text, category, priority, dueDate });
       taskInput.value = '';
+      dueDateInput.value = '';
       taskInput.focus();
 
+      triggerHaptic();
       render(newTask.id);
       showToast('Задача успешно добавлена!');
       announceA11y(`Добавлена новая задача: ${text}`);
@@ -277,23 +492,22 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   taskInput.addEventListener('input', () => {
-    if (formError.textContent) {
-      formError.textContent = '';
-    }
+    if (formError.textContent) formError.textContent = '';
   });
 
   /* ==========================================================================
-     Обработчики действий над задачами (делегирование событий)
+     Обработчики действий над задачами
      ========================================================================== */
   tasksList.addEventListener('click', (e) => {
     const item = e.target.closest('.task-item');
     if (!item) return;
     const id = item.dataset.id;
 
-    // Переключение чекбокса
+    // Чекбокс
     if (e.target.closest('.checkbox-container')) {
       const updated = store.toggleTask(id);
       if (updated) {
+        triggerHaptic();
         item.classList.toggle('completed', updated.completed);
         const checkbox = item.querySelector('.checkbox-native');
         if (checkbox) checkbox.checked = updated.completed;
@@ -306,8 +520,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Удаление задачи
+    // Удаление
     if (e.target.closest('.delete-btn')) {
+      triggerHaptic();
       item.classList.add('fade-out');
       setTimeout(() => {
         const deleted = store.deleteTask(id);
@@ -320,14 +535,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Редактирование задачи (кнопка редактирования)
+    // Редактирование
     if (e.target.closest('.edit-btn')) {
       startInlineEdit(item, id);
       return;
     }
   });
 
-  // Редактирование по двойному клику на заголовок
+  // Двойной клик на текст
   tasksList.addEventListener('dblclick', (e) => {
     const titleEl = e.target.closest('.task-title');
     if (!titleEl) return;
@@ -338,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     Редактирование задачи по месту (Inline edit)
+     Редактирование задачи на месте (Inline edit)
      ========================================================================== */
   function startInlineEdit(item, id) {
     if (item.classList.contains('editing')) return;
@@ -370,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (save) {
         const newText = input.value.trim();
         if (newText && newText !== originalText) {
-          store.editTask(id, newText);
+          store.editTask(id, { text: newText });
           showToast('Задача обновлена');
           announceA11y(`Текст задачи изменен на: ${newText}`);
         }
@@ -388,14 +603,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        finishEdit(false);
-      }
+      if (e.key === 'Escape') finishEdit(false);
     });
   }
 
   /* ==========================================================================
-     Фильтры и Поиск
+     Фильтры, сортировка и поиск
      ========================================================================== */
   filterTabs.forEach((tab) => {
     tab.addEventListener('click', () => {
@@ -418,24 +631,24 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
   });
 
-  /* ==========================================================================
-     Очистка завершенных задач
-     ========================================================================== */
+  sortSelect.addEventListener('change', (e) => {
+    currentSort = e.target.value;
+    render();
+    showToast('Сортировка обновлена');
+  });
+
   clearCompletedBtn.addEventListener('click', () => {
     const stats = store.getStats();
     if (stats.completed === 0) return;
 
+    triggerHaptic();
     const count = store.clearCompleted();
     render();
     showToast(`Удалено завершенных задач: ${count}`);
     announceA11y(`Удалено завершенных задач: ${count}`);
   });
 
-  /* ==========================================================================
-     Переключение темы и инициализация
-     ========================================================================== */
-  themeToggle.addEventListener('click', toggleTheme);
-
-  initTheme();
+  // Инициализация
+  initCustomization();
   render();
 });

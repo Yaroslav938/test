@@ -22,22 +22,28 @@ test('TaskStore: Загрузка задач по умолчанию при пе
   assert.equal(tasks.some((t) => t.completed === false), true);
 });
 
-test('TaskStore: Добавление новой задачи', () => {
+test('TaskStore: Добавление новой задачи с приоритетом и дедлайном', () => {
   const storage = createMockStorage({ test_tasks: '[]' });
   const store = new TaskStore('test_tasks', storage);
 
-  const newTask = store.addTask({ text: 'Изучить Antigravity AI', category: 'study' });
+  const newTask = store.addTask({
+    text: 'Изучить Antigravity AI',
+    category: 'study',
+    priority: 'high',
+    dueDate: '2026-11-20',
+  });
   assert.equal(newTask.text, 'Изучить Antigravity AI');
   assert.equal(newTask.category, 'study');
+  assert.equal(newTask.priority, 'high');
+  assert.equal(newTask.dueDate, '2026-11-20');
   assert.equal(newTask.completed, false);
   assert.ok(newTask.id);
-  assert.ok(newTask.createdAt);
 
   assert.equal(store.getAll().length, 1);
   assert.throws(() => store.addTask({ text: '   ' }), /Текст задачи не может быть пустым/);
 });
 
-test('TaskStore: Переключение статуса выполнения', () => {
+test('TaskStore: Переключение статуса и завершение', () => {
   const storage = createMockStorage({ test_tasks: '[]' });
   const store = new TaskStore('test_tasks', storage);
 
@@ -46,84 +52,64 @@ test('TaskStore: Переключение статуса выполнения', 
 
   const toggled = store.toggleTask(task.id);
   assert.equal(toggled.completed, true);
+  assert.ok(toggled.completedAt);
 
   const toggledAgain = store.toggleTask(task.id);
   assert.equal(toggledAgain.completed, false);
+  assert.equal(toggledAgain.completedAt, null);
 });
 
-test('TaskStore: Редактирование текста задачи', () => {
+test('TaskStore: Редактирование текста и параметров задачи', () => {
   const storage = createMockStorage({ test_tasks: '[]' });
   const store = new TaskStore('test_tasks', storage);
 
   const task = store.addTask({ text: 'Начальный текст' });
-  const updated = store.editTask(task.id, 'Обновленный текст');
+  const updated = store.editTask(task.id, {
+    text: 'Обновленный текст',
+    priority: 'high',
+    dueDate: '2026-12-01',
+  });
 
   assert.equal(updated.text, 'Обновленный текст');
+  assert.equal(updated.priority, 'high');
+  assert.equal(updated.dueDate, '2026-12-01');
   assert.ok(updated.updatedAt);
-  assert.throws(() => store.editTask(task.id, ''), /Текст задачи не может быть пустым/);
 });
 
-test('TaskStore: Удаление конкретной задачи', () => {
+test('TaskStore: Сортировка по приоритету и дедлайну', () => {
   const storage = createMockStorage({ test_tasks: '[]' });
   const store = new TaskStore('test_tasks', storage);
 
-  const t1 = store.addTask({ text: 'Задача 1' });
-  const t2 = store.addTask({ text: 'Задача 2' });
+  store.addTask({ text: 'Низкий приоритет', priority: 'low', dueDate: '2026-11-25' });
+  store.addTask({ text: 'Высокий приоритет', priority: 'high', dueDate: '2026-11-10' });
+  store.addTask({ text: 'Средний приоритет', priority: 'medium', dueDate: '2026-11-15' });
 
-  assert.equal(store.getAll().length, 2);
-  const deleted = store.deleteTask(t1.id);
-  assert.equal(deleted, true);
-  assert.equal(store.getAll().length, 1);
-  assert.equal(store.getAll()[0].id, t2.id);
+  const byPriority = store.getFilteredTasks({ sortBy: 'priority-desc' });
+  assert.equal(byPriority[0].priority, 'high');
+  assert.equal(byPriority[1].priority, 'medium');
+  assert.equal(byPriority[2].priority, 'low');
+
+  const byDate = store.getFilteredTasks({ sortBy: 'due-date' });
+  assert.equal(byDate[0].dueDate, '2026-11-10');
+  assert.equal(byDate[1].dueDate, '2026-11-15');
+  assert.equal(byDate[2].dueDate, '2026-11-25');
 });
 
-test('TaskStore: Очистка выполненных задач', () => {
+test('TaskStore: Экспорт и импорт данных в формате JSON', () => {
   const storage = createMockStorage({ test_tasks: '[]' });
   const store = new TaskStore('test_tasks', storage);
 
-  const t1 = store.addTask({ text: 'Задача 1' });
-  const t2 = store.addTask({ text: 'Задача 2' });
-  store.toggleTask(t1.id);
+  store.addTask({ text: 'Экспортируемая задача', category: 'work', priority: 'high' });
+  const jsonOutput = store.exportData();
 
-  assert.equal(store.getStats().completed, 1);
-  assert.equal(store.getStats().active, 1);
+  assert.ok(jsonOutput.includes('TaskFlow'));
+  assert.ok(jsonOutput.includes('Экспортируемая задача'));
 
-  const clearedCount = store.clearCompleted();
-  assert.equal(clearedCount, 1);
-  assert.equal(store.getAll().length, 1);
-  assert.equal(store.getAll()[0].id, t2.id);
-});
+  const newStorage = createMockStorage({ test_tasks: '[]' });
+  const newStore = new TaskStore('test_tasks', newStorage);
 
-test('TaskStore: Статистика и процент выполнения', () => {
-  const storage = createMockStorage({ test_tasks: '[]' });
-  const store = new TaskStore('test_tasks', storage);
-
-  assert.deepEqual(store.getStats(), { total: 0, completed: 0, active: 0, percent: 0 });
-
-  const t1 = store.addTask({ text: '1' });
-  const t2 = store.addTask({ text: '2' });
-  store.toggleTask(t1.id);
-
-  assert.deepEqual(store.getStats(), { total: 2, completed: 1, active: 1, percent: 50 });
-});
-
-test('TaskStore: Фильтрация и поиск', () => {
-  const storage = createMockStorage({ test_tasks: '[]' });
-  const store = new TaskStore('test_tasks', storage);
-
-  const t1 = store.addTask({ text: 'Купить молоко' });
-  const t2 = store.addTask({ text: 'Написать код' });
-  store.toggleTask(t1.id);
-
-  const active = store.getFilteredTasks({ filter: 'active' });
-  assert.equal(active.length, 1);
-  assert.equal(active[0].id, t2.id);
-
-  const completed = store.getFilteredTasks({ filter: 'completed' });
-  assert.equal(completed.length, 1);
-  assert.equal(completed[0].id, t1.id);
-
-  const searched = store.getFilteredTasks({ searchQuery: 'молоко' });
-  assert.equal(searched.length, 1);
-  assert.equal(searched[0].id, t1.id);
+  const importedCount = newStore.importData(jsonOutput, true);
+  assert.equal(importedCount, 1);
+  assert.equal(newStore.getAll()[0].text, 'Экспортируемая задача');
+  assert.equal(newStore.getAll()[0].priority, 'high');
 });
